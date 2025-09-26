@@ -1,90 +1,102 @@
-import React, { useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, FeatureGroup } from 'react-leaflet';
-import { EditControl } from 'react-leaflet-draw';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
-import * as L from 'leaflet';
-import turf from '@turf/area';
+import React, { useRef, useMemo } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  FeatureGroup,
+} from "react-leaflet";
+import { EditControl } from "react-leaflet-draw";
+import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
+import * as L from "leaflet";
+import turf from "@turf/area";
 
 // --- Leaflet Icon Fix ---
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 // --- Recenter map when center changes ---
 function ChangeView({ center }) {
-    const map = useMap();
-    if (center && center.length === 2 && map) {
-        map.setView(center, map.getZoom() || 15);
-    }
-    return null;
+  const map = useMap();
+  if (center && center.length === 2 && map) {
+    map.setView(center, map.getZoom() || 15);
+  }
+  return null;
 }
 
 // --- Drawing controls ---
 function MapControls({ onAreaCalculated }) {
-    const onCreated = (e) => {
-        const layer = e.layer;
+  const onCreated = (e) => {
+    const layer = e.layer;
 
-        // Calculate area if polygon/rectangle
-        if (e.layerType === 'polygon' || e.layerType === 'rectangle') {
-            const geoJsonData = layer.toGeoJSON();
-            const areaSqMeters = turf(geoJsonData);
-            onAreaCalculated(areaSqMeters);
-        }
-    };
+    // Calculate area if polygon/rectangle
+    if (e.layerType === "polygon" || e.layerType === "rectangle") {
+      const geoJsonData = layer.toGeoJSON();
+      const areaSqMeters = turf(geoJsonData);
+      onAreaCalculated(areaSqMeters);
+    }
+  };
 
-    return (
-        <FeatureGroup>
-            <EditControl
-                position="topright"
-                onCreated={onCreated}
-                edit={{ featureGroup: new L.FeatureGroup() }} // ✅ valid FeatureGroup always
-                draw={{
-                    polygon: { showArea: true },
-                    rectangle: true,
-                    polyline: false,
-                    circlemarker: false,
-                    circle: false,
-                    marker: false
-                }}
-            />
-        </FeatureGroup>
-    );
+  return (
+    <FeatureGroup>
+      <EditControl
+        position="topright"
+        onCreated={onCreated}
+        edit={{ featureGroup: new L.FeatureGroup() }} // ✅ valid FeatureGroup always
+        draw={{
+          polygon: { showArea: true },
+          rectangle: true,
+          polyline: false,
+          circlemarker: false,
+          circle: false,
+          marker: false,
+        }}
+      />
+    </FeatureGroup>
+  );
 }
 
 // --- Main Map Component ---
 export default function LocationPlannerMap({ center, onAreaCalculated }) {
-    const memoizedCenter = useMemo(() => center, [center]);
-    const mapRef = useRef(null);
+  const memoizedCenter = useMemo(() => center, [center]);
+  const mapRef = useRef(null);
 
-    const setRef = (mapInstance) => {
-        mapRef.current = mapInstance;
-    };
+  const setRef = (mapInstance) => {
+    mapRef.current = mapInstance;
+  };
 
-    return (
-        <div style={{ marginTop: '20px' }}>
-            <MapContainer
-                center={memoizedCenter}
-                zoom={15}
-                scrollWheelZoom={true}
-                style={{ height: '500px', width: '100%', border: '1px solid #007bff' }}
-                ref={setRef}
-            >
-                <ChangeView center={memoizedCenter} />
+  return (
+    <div style={{ marginTop: "20px" }}>
+      <MapContainer
+        center={memoizedCenter}
+        zoom={15}
+        scrollWheelZoom={true}
+        style={{ height: "500px", width: "100%", border: "1px solid #007bff" }}
+        ref={setRef}
+      >
+        <ChangeView center={memoizedCenter} />
 
-                <TileLayer
+        {/* <TileLayer
                     attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+                /> */}
 
-                <Marker position={memoizedCenter} />
+        <TileLayer
+          attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a>'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        />
 
-                {/* Drawing controls */}
-                <MapControls onAreaCalculated={onAreaCalculated} />
-            </MapContainer>
-        </div>
-    );
+        <Marker position={memoizedCenter} />
+
+        {/* Drawing controls */}
+        <MapControls onAreaCalculated={onAreaCalculated} />
+      </MapContainer>
+    </div>
+  );
 }
