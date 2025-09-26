@@ -1,110 +1,87 @@
-import React, { useState } from 'react';
-import BasicInfoForm from '../Components/BasicInfoForm';
-import LocationPlannerMap
- from '../Components/LocationPlannerMap';
-// --- Dashboard Component (The Main Controller/Container) ---
+import React, { useState } from "react";
+import BasicInfoForm from "../Components/BasicInfoForm";
+import RainfallStep from "../Components/RainfallStep";
+import SiteConditionsStep from "../Components/SiteConditionsStep";
+import groundwaterJson from "../assets/water_levels.json";
+
 export default function Dashboard() {
-    // State to manage map visibility and centering
-    const [mapCenter, setMapCenter] = useState(null); 
-    const [calculatedArea, setCalculatedArea] = useState(0);
-    const [status, setStatus] = useState('Enter location details to view the map.');
+  const [step, setStep] = useState(1);
 
-    // --- Geocoding Function (Forward Geocoding: Address to Lat/Lon) ---
-    const handleLocationSearch = async (locationText) => {
-        if (!locationText) return;
-        setStatus('Searching for address...');
-        // ... (rest of search logic remains the same)
+  // --- Step 1 ---
+  const [fullName, setFullName] = useState("");
+  const [dwellers, setDwellers] = useState("");
+  const [locationText, setLocationText] = useState("");
+  const [mapCenter, setMapCenter] = useState(null);
+  const [roofArea, setRoofArea] = useState(0);
+  const [roofAreaDrawn, setRoofAreaDrawn] = useState(false);
+  const [roofLatLng, setRoofLatLng] = useState(null); // ✅ store roof centroid
 
-        const encodedAddress = encodeURIComponent(locationText);
-        const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`;
+  // --- Step 2 ---
+  const [rainfall, setRainfall] = useState(null);
 
-        try {
-            const response = await fetch(nominatimUrl);
-            const data = await response.json();
+  // --- Step 3 ---
+  const [openSpaceArea, setOpenSpaceArea] = useState(0);
+  const [openSpaceDrawn, setOpenSpaceDrawn] = useState(false);
+  const [groundwaterData, setGroundwaterData] = useState({
+    depthToWater: "",
+    aquiferType: "",
+    regionalDepth: "",
+  });
 
-            if (data && data.length > 0) {
-                const newCenter = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                setMapCenter(newCenter);
-                setStatus(`Location found: ${data[0].display_name}. Use the map tool to draw your area.`);
-            } else {
-                setMapCenter(null);
-                setStatus('Location not found. Please try a more specific search.');
-            }
-        } catch (error) {
-            setMapCenter(null);
-            setStatus('Error connecting to the search service.');
-        }
-    };
-
-    // --- Geolocation Function (Browser GPS to Lat/Lon) ---
-    const handleUseMyLocation = () => {
-        setStatus('Getting live location...');
-        
-        if (!navigator.geolocation) {
-            setStatus('Geolocation is not supported by your browser.');
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const newCenter = [pos.coords.latitude, pos.coords.longitude];
-                
-                // 🚀 CONSOLE LOG FOR CHECKING
-                console.log('✅ Geolocation Successful!');
-                console.log('Latitude:', newCenter[0]);
-                console.log('Longitude:', newCenter[1]);
-                console.log('Accuracy (meters):', pos.coords.accuracy);
-                // --------------------------
-
-                setMapCenter(newCenter);
-                setStatus('Live location set! Draw your area on the map using the top-right tool.');
-            },
-            (err) => {
-                console.error('❌ Geolocation Error:', err); // Log the error if it fails
-                setMapCenter(null);
-                setStatus(`Error: ${err.message}. Please allow location access in your browser.`);
-            }
-        );
-    };
-
+  // --- District-level groundwater lookup ---
+  const findDistrictWater = (districtName) => {
     return (
-        <div style={{ padding: '20px', maxWidth: '1200px', margin: '20px auto', backgroundColor: '#f9f9f9', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-            <h2>Rainwater Harvesting Assessment Dashboard</h2>
-            
-            <p style={{ fontWeight: 'bold', color: mapCenter ? '#28a745' : '#007bff' }}>
-                {status}
-            </p>
-
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                
-                {/* LEFT SIDE: The Form */}
-                <BasicInfoForm 
-                    onLocationSearch={handleLocationSearch} 
-                    onUseMyLocation={handleUseMyLocation} 
-                />
-
-                {/* RIGHT SIDE: The Map View and Results */}
-                <div style={{ flexGrow: 1, minWidth: '550px' }}>
-                    {mapCenter ? (
-                        <>
-                            <LocationPlannerMap 
-                                center={mapCenter} 
-                                onAreaCalculated={setCalculatedArea} 
-                            />
-                            <h3 style={{ marginTop: '10px' }}>
-                                Calculated Area (Roof Area): 
-                                <span style={{ color: 'darkred' }}> 
-                                    {calculatedArea.toFixed(2)} sq. meters
-                                </span>
-                            </h3>
-                        </>
-                    ) : (
-                        <div style={{ height: '500px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '2px dashed #ccc' }}>
-                            Map Area: Search a location or use GPS to begin planning.
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+      groundwaterJson.find(
+        (entry) => entry.DISTRICT.toLowerCase() === districtName.toLowerCase()
+      ) || null
     );
+  };
+
+  return (
+    <div className="container my-4">
+      <h2>Rainwater Harvesting Assessment Dashboard</h2>
+
+      {step === 1 && (
+        <BasicInfoForm
+          fullName={fullName}
+          setFullName={setFullName}
+          dwellers={dwellers}
+          setDwellers={setDwellers}
+          locationText={locationText}
+          setLocationText={setLocationText}
+          mapCenter={mapCenter}
+          setMapCenter={setMapCenter}
+          roofArea={roofArea}
+          setRoofArea={setRoofArea}
+          roofAreaDrawn={roofAreaDrawn}
+          setRoofAreaDrawn={setRoofAreaDrawn}
+          roofLatLng={roofLatLng}
+          setRoofLatLng={setRoofLatLng} // ✅ pass to form
+          setStep={setStep}
+          setRainfall={setRainfall}
+        />
+      )}
+
+      {step === 2 && (
+        <RainfallStep roofArea={roofArea} rainfall={rainfall} setStep={setStep} />
+      )}
+
+      {step === 3 && (
+        <SiteConditionsStep
+          mapCenter={mapCenter}
+          openSpaceArea={openSpaceArea}
+          setOpenSpaceArea={setOpenSpaceArea}
+          openSpaceDrawn={openSpaceDrawn}
+          setOpenSpaceDrawn={setOpenSpaceDrawn}
+          groundwaterJson={groundwaterJson}
+          setGroundwaterData={setGroundwaterData}
+          findDistrictWater={findDistrictWater}
+          locationText={locationText}
+          roofLatLng={roofLatLng} // ✅ use roofLatLng to detect district
+          setStep={setStep}
+          groundwaterData={groundwaterData}
+        />
+      )}
+    </div>
+  );
 }
