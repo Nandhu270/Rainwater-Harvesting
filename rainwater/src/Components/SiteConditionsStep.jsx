@@ -1,134 +1,5 @@
-// import React, { useEffect } from "react";
-// import LocationPlannerMap from "./LocationPlannerMap";
 
-// export default function SiteConditionsStep({
-//   mapCenter,
-//   openSpaceArea,
-//   setOpenSpaceArea,
-//   openSpaceDrawn,
-//   setOpenSpaceDrawn,
-//   groundwaterData,
-//   setGroundwaterData,
-//   groundwaterJson,
-//   locationText,
-//   roofLatLng,
-//   setStep,
-// }) {
-//   // Find nearest district using roofLatLng
-//   const findDistrictWater = (latLng) => {
-//     if (!groundwaterJson || !latLng) return null;
-
-//     // Simple match: find first district where latitude is close
-//     return (
-//       groundwaterJson.find(
-//         (entry) => Math.abs(entry.LATITUDE - latLng[0]) < 0.05
-//       ) || null
-//     );
-//   };
-
-//   // Auto-calculate groundwater data when component loads or roofLatLng changes
-//   useEffect(() => {
-//     if (roofLatLng) {
-//       const waterData = findDistrictWater(roofLatLng);
-
-//       if (waterData) {
-//         setGroundwaterData({
-//           depthToWater: waterData["WL(mbgl)"],
-//           aquiferType: waterData.BLOCK || "-",
-//           regionalDepth: waterData.VILLAGE || "-",
-//         });
-//       } else {
-//         setGroundwaterData({
-//           depthToWater: "N/A",
-//           aquiferType: "-",
-//           regionalDepth: "-",
-//         });
-//       }
-//     }
-//   }, [roofLatLng, groundwaterJson, setGroundwaterData]);
-
-//   return (
-//     <div className="card p-4 shadow-sm">
-//       <h4>Site Conditions</h4>
-//       <div className="row">
-//         <div className="col-md-6">
-//           <div className="mb-3">
-//             <label>Available Open Space (sq.m)</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               value={openSpaceDrawn ? openSpaceArea.toFixed(2) : ""}
-//               readOnly
-//             />
-//           </div>
-
-//           <div className="mb-3">
-//             <label>Depth to Water Table (m)</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               value={groundwaterData?.depthToWater || ""}
-//               readOnly
-//             />
-//           </div>
-
-//           <div className="mb-3">
-//             <label>Principal Aquifer Type</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               value={"Basaltic lava Flows(Deccan Traps)"}
-//               readOnly
-//             />
-//           </div>
-
-//           <div className="mb-3">
-//             <label>Regional Water Depth (Pre-Monsoon)</label>
-//             <input
-//               type="text"
-//               className="form-control"
-//               value={"5-20m"}
-//               readOnly
-//             />
-//           </div>
-
-//           <div className="d-flex justify-content-between">
-//             <button
-//               className="btn btn-outline-secondary"
-//               onClick={() => setStep(2)}
-//             >
-//               ⬅ Previous
-//             </button>
-
-//             <button className="btn btn-primary" onClick={() => setStep(4)}>
-//               Show Conclusion ➡
-//             </button>
-//           </div>
-//         </div>
-
-//         <div className="col-md-6">
-//           {mapCenter ? (
-//             <LocationPlannerMap
-//               center={mapCenter}
-//               onAreaCalculated={(area, latLng) => {
-//                 setOpenSpaceArea(area);
-//                 setOpenSpaceDrawn(true);
-//               }}
-//             />
-//           ) : (
-//             <div
-//               className="d-flex align-items-center justify-content-center border border-secondary"
-//               style={{ height: "400px" }}
-//             >
-//               Map: Set location first
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import LocationPlannerMap from "./LocationPlannerMap";
 
 export default function SiteConditionsStep({
@@ -144,44 +15,63 @@ export default function SiteConditionsStep({
   roofLatLng,
   setStep,
   soilType,
-  setSoilType, // ✅ setter for soil type (controlled by parent)
+  setSoilType,
+  findDistrictWater,
 }) {
-  // Find nearest district using roofLatLng
-  const findDistrictWater = (latLng) => {
-    if (!groundwaterJson || !latLng) return null;
+  const [localMessage, setLocalMessage] = useState("");
 
-    // Simple match: find first district where latitude is close
-    return (
-      groundwaterJson.find(
-        (entry) => Math.abs(entry.LATITUDE - latLng[0]) < 0.05
-      ) || null
-    );
-  };
-
-  // Auto-calculate groundwater when component loads or roofLatLng changes
+  // Try to auto-populate groundwater info from roofLatLng if available
   useEffect(() => {
-    if (roofLatLng) {
-      const waterData = findDistrictWater(roofLatLng);
-
-      if (waterData) {
+    if (roofLatLng && groundwaterJson) {
+      // simple nearest-by-latitude lookup (fallback)
+      const water = groundwaterJson.find(
+        (entry) =>
+          entry.LATITUDE &&
+          Math.abs(Number(entry.LATITUDE) - Number(roofLatLng[0])) < 0.05
+      );
+      if (water) {
         setGroundwaterData({
-          depthToWater: waterData["WL(mbgl)"],
-          aquiferType: waterData.BLOCK || "-",
-          regionalDepth: waterData.VILLAGE || "-",
+          depthToWater: water["WL(mbgl)"] || water.WL || "N/A",
+          aquiferType: water.BLOCK || "-",
+          regionalDepth: water.VILLAGE || "-",
         });
       } else {
+        // leave as-is if not found
         setGroundwaterData({
-          depthToWater: "N/A",
-          aquiferType: "-",
-          regionalDepth: "-",
+          ...groundwaterData,
+          depthToWater: groundwaterData?.depthToWater || "N/A",
         });
       }
     }
-  }, [roofLatLng, groundwaterJson, setGroundwaterData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roofLatLng]);
+
+  const handleShowConclusion = () => {
+    // Validate all required inputs in SiteConditionsStep
+    const missing = [];
+    if (!soilType) missing.push("Soil Type");
+    if (!openSpaceDrawn || !openSpaceArea || openSpaceArea <= 0)
+      missing.push("Available Open Space (draw on map)");
+    const depth = groundwaterData?.depthToWater;
+    if (!depth || depth === "N/A" || isNaN(Number(depth))) missing.push("Depth to water table (m)");
+
+    if (missing.length > 0) {
+      const msg = `Please provide: ${missing.join(", ")}. See Hydrogeology panel for guidance.`;
+      setLocalMessage(msg);
+      // also make HydrogeoCard aware via groundwaterData: we'll keep as is and HydrogeoCard will display guidance
+      return;
+    }
+    // All good
+    setLocalMessage("");
+    setStep(4);
+  };
 
   return (
     <div className="card p-4 shadow-sm">
       <h4>Site Conditions</h4>
+
+      {localMessage && <div className="alert alert-warning">{localMessage}</div>}
+
       <div className="row">
         <div className="col-md-6">
           <div className="mb-3">
@@ -192,6 +82,7 @@ export default function SiteConditionsStep({
               value={openSpaceDrawn ? openSpaceArea.toFixed(2) : ""}
               readOnly
             />
+            <small className="text-muted">Draw on map to set this value.</small>
           </div>
 
           <div className="mb-3">
@@ -204,27 +95,7 @@ export default function SiteConditionsStep({
             />
           </div>
 
-          <div className="mb-3">
-            <label>Principal Aquifer Type</label>
-            <input
-              type="text"
-              className="form-control"
-              value={"Basaltic lava Flows(Deccan Traps)"}
-              readOnly
-            />
-          </div>
-
-          <div className="mb-3">
-            <label>Regional Water Depth (Pre-Monsoon)</label>
-            <input
-              type="text"
-              className="form-control"
-              value={"5-20m"}
-              readOnly
-            />
-          </div>
-
-          {/* ✅ Soil Type dropdown */}
+          {/* Soil Type dropdown */}
           <div className="mb-3">
             <label>Soil Type</label>
             <select
@@ -243,14 +114,10 @@ export default function SiteConditionsStep({
           </div>
 
           <div className="d-flex justify-content-between">
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => setStep(2)}
-            >
+            <button className="btn btn-outline-secondary" onClick={() => setStep(2)}>
               ⬅ Previous
             </button>
-
-            <button className="btn btn-primary" onClick={() => setStep(4)}>
+            <button className="btn btn-primary" onClick={handleShowConclusion}>
               Show Conclusion ➡
             </button>
           </div>
@@ -260,7 +127,7 @@ export default function SiteConditionsStep({
           {mapCenter ? (
             <LocationPlannerMap
               center={mapCenter}
-              onAreaCalculated={(area, latLng) => {
+              onAreaCalculated={(area /* m2 */, latLng) => {
                 setOpenSpaceArea(area);
                 setOpenSpaceDrawn(true);
               }}

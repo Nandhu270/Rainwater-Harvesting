@@ -1,11 +1,10 @@
-// components/ConclusionDashboard.jsx
+
 import React from "react";
 import SummaryCard from "./SummaryCard";
 import RunoffCard from "./RunoffCard";
 import GroundwaterRechargeCard from "./GroundwaterRechargeCard";
 import HydrogeoCard from "./HydrogeoCard";
-import RecommendedStructureCard from "./RecommendedStructureCard";
-import CostBenefitCard from "./CostBenefitCard";
+import SuitableStructureCard from "./SuitableStructureCard";
 
 export default function ConclusionDashboard({
   fullName,
@@ -42,11 +41,7 @@ export default function ConclusionDashboard({
         </div>
 
         <div className="col-md-6">
-          <RunoffCard
-            roofArea={roofArea}
-            rainfall={rainfall}
-            dwellers={dwellers}
-          />
+          <RunoffCard roofArea={roofArea} rainfall={rainfall} dwellers={dwellers} />
         </div>
 
         <div className="col-md-6">
@@ -59,11 +54,11 @@ export default function ConclusionDashboard({
         </div>
 
         <div className="col-md-6">
-          <HydrogeoCard groundwaterData={groundwaterData} />
+          <HydrogeoCard groundwaterData={groundwaterData} rainfall={rainfall} />
         </div>
 
         <div className="col-md-6">
-          <RecommendedStructureCard
+          <SuitableStructureCard
             roofArea={roofArea}
             rainfall={rainfall}
             openSpaceArea={openSpaceArea}
@@ -72,14 +67,6 @@ export default function ConclusionDashboard({
             dwellers={dwellers}
             locationText={locationText}
             roofLatLng={roofLatLng}
-          />
-        </div>
-
-        <div className="col-md-12">
-          <CostBenefitCard
-            roofArea={roofArea}
-            rainfall={rainfall}
-            dwellers={dwellers}
           />
         </div>
       </div>

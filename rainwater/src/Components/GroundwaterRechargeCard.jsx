@@ -1,11 +1,5 @@
-// components/GroundwaterRechargeCard.jsx
-import React, { useMemo } from "react";
 
-/**
- * Groundwater recharge engine:
- * - Uses available open space area (m2) to estimate infiltration recharge
- * - rechargeEfficiency accounts for infiltration & design; default 0.5 (50% of rainfall over recharge area ends up recharging)
- */
+import React, { useMemo } from "react";
 
 export default function GroundwaterRechargeCard({
   roofArea = 0,
@@ -20,7 +14,7 @@ export default function GroundwaterRechargeCard({
     return r;
   }, [rainfall]);
 
-  const rechargeEfficiency = 0.5; // assumption
+  const rechargeEfficiency = 0.5;
 
   const annualRechargeM3 = useMemo(() => {
     const mm = annualRainfallMM;
@@ -29,9 +23,8 @@ export default function GroundwaterRechargeCard({
   }, [openSpaceArea, annualRainfallMM]);
 
   const recommendedRechargeStructure = useMemo(() => {
-    // If depth to water is shallow (<10 m) prefer recharge pits; else recharge wells
     const d = Number(groundwaterData?.depthToWater);
-    if (!isFinite(d)) return "Percolation pit / recharge trench (local evaluation recommended)";
+    if (!isFinite(d)) return "Percolation pit / recharge trench (site evaluation recommended)";
     if (d <= 10) return "Percolation pit / shallow recharge trench";
     return "Recharge well (engineered) with filter media";
   }, [groundwaterData]);
@@ -39,19 +32,15 @@ export default function GroundwaterRechargeCard({
   return (
     <div className="card p-3 shadow-sm">
       <h5>Groundwater Recharge Engine</h5>
-
       <div className="mb-2">
-        <strong>Annual potential recharge (from open space):</strong>{" "}
-        {annualRechargeM3 ? `${annualRechargeM3.toFixed(2)} m³` : "N/A"}
+        <strong>Annual potential recharge (from open space):</strong> {annualRechargeM3 ? `${annualRechargeM3.toFixed(2)} m³` : "N/A"}
       </div>
-
       <div className="mb-2">
         <strong>Recommended recharge structure:</strong> {recommendedRechargeStructure}
       </div>
 
       <div className="mb-2 text-muted">
-        Assumptions: {rechargeEfficiency * 100}% effective infiltration on open space. Local site soils and
-        geology will affect real recharge — carry out infiltration tests before final design.
+        Assumptions: {rechargeEfficiency * 100}% effective infiltration on available open space. Conduct infiltration tests & local site investigation before final design.
       </div>
     </div>
   );
