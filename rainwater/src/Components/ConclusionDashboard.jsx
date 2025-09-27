@@ -1,4 +1,3 @@
-
 import React from "react";
 import SummaryCard from "./SummaryCard";
 import RunoffCard from "./RunoffCard";
@@ -22,14 +21,18 @@ export default function ConclusionDashboard({
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h3>Assessment & Recommendations</h3>
         <div>
-          <button className="btn btn-outline-secondary me-2" onClick={() => setStep(3)}>
+          <button
+            className="btn btn-outline-secondary me-2"
+            onClick={() => setStep(3)}
+          >
             ⬅ Back
           </button>
         </div>
       </div>
 
       <div className="row g-3">
-        <div className="col-md-12">
+        {/* Full-width Summary */}
+        <div className="col-12">
           <SummaryCard
             fullName={fullName}
             dwellers={dwellers}
@@ -40,11 +43,16 @@ export default function ConclusionDashboard({
           />
         </div>
 
-        <div className="col-md-6">
-          <RunoffCard roofArea={roofArea} rainfall={rainfall} dwellers={dwellers} />
+        {/* Half-width cards */}
+        <div className="col-md-6 d-flex">
+          <RunoffCard
+            roofArea={roofArea}
+            rainfall={rainfall}
+            dwellers={dwellers}
+          />
         </div>
 
-        <div className="col-md-6">
+        <div className="col-md-6 d-flex">
           <GroundwaterRechargeCard
             roofArea={roofArea}
             rainfall={rainfall}
@@ -53,11 +61,11 @@ export default function ConclusionDashboard({
           />
         </div>
 
-        <div className="col-md-6">
+        <div className="col-md-6 d-flex">
           <HydrogeoCard groundwaterData={groundwaterData} rainfall={rainfall} />
         </div>
 
-        <div className="col-md-6">
+        <div className="col-md-6 d-flex">
           <SuitableStructureCard
             roofArea={roofArea}
             rainfall={rainfall}

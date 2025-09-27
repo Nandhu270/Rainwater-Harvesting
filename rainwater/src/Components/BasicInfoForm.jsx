@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import LocationPlannerMap from "./LocationPlannerMap";
 
@@ -24,7 +23,6 @@ export default function BasicInfoForm({
     "Enter location details to view the map."
   );
 
-  // Geocoding
   const handleLocationSearch = async () => {
     if (!locationText) return;
     setStatus("Searching address...");
@@ -45,7 +43,6 @@ export default function BasicInfoForm({
     }
   };
 
-  // Use My Location
   const handleUseMyLocation = () => {
     if (!navigator.geolocation) return alert("Geolocation not supported.");
     setStatus("Getting your current location...");
@@ -80,13 +77,12 @@ export default function BasicInfoForm({
     );
   };
 
-  // Next: validate basics and fetch historical rainfall (simple archive)
   const handleNext = async () => {
     if (!fullName || !dwellers) return alert("Enter name & number of dwellers.");
     if (!mapCenter) return alert("Set location first (search or use my location).");
     if (!roofAreaDrawn) return alert("Draw roof area first on the map.");
 
-    // Fetch rainfall (annual average) using open-meteo archive (best-effort)
+    // Fetch rainfall (annual average) — simplified
     try {
       const today = new Date().toISOString().split("T")[0];
       const start = "2020-01-01";
@@ -95,13 +91,7 @@ export default function BasicInfoForm({
       const data = await res.json();
       if (data?.daily?.precipitation_sum) {
         const sums = data.daily.precipitation_sum;
-        const avg =
-          sums.reduce((a, b) => a + (b || 0), 0) / (sums.length || 1);
-        // avg here is daily summed precipitation (mm per day aggregated?) but conservative: use annualized
-        // We'll convert to annual mm by summing all daily precipitation and using the sums' average * number of days covered
         const total = sums.reduce((a, b) => a + (b || 0), 0);
-        const annualEstimate = total / (sums.length || 1); // this is total over period averaged per day; to keep simple we convert to yearly
-        // Simpler approach: take average daily -> annual = avg * 365
         const avgDaily = total / (sums.length || 1);
         const annual = avgDaily * 365;
         setRainfall(Number(annual.toFixed(2)));
@@ -119,12 +109,15 @@ export default function BasicInfoForm({
   return (
     <>
       <p style={{ color: mapCenter ? "#28a745" : "#007bff" }}>{status}</p>
-      <div className="row">
-        <div className="col-md-4">
-          <div className="card p-3 shadow-sm">
-            <h3>Basic Info</h3>
+      
+      <div className="row g-4">
+        {/* Left Column: Form */}
+        <div className="col-12 col-md-5">
+          <div className="card p-3 shadow-sm h-100">
+            <h3 className="mb-3">Basic Info</h3>
+
             <div className="mb-3">
-              <label>Full Name</label>
+              <label className="form-label">Full Name</label>
               <input
                 type="text"
                 className="form-control"
@@ -134,7 +127,7 @@ export default function BasicInfoForm({
             </div>
 
             <div className="mb-3">
-              <label>Number of Dwellers</label>
+              <label className="form-label">Number of Dwellers</label>
               <input
                 type="number"
                 className="form-control"
@@ -144,32 +137,33 @@ export default function BasicInfoForm({
             </div>
 
             <div className="mb-3">
-              <label>Location</label>
+              <label className="form-label">Location</label>
               <input
                 type="text"
                 className="form-control"
                 value={locationText}
                 onChange={(e) => setLocationText(e.target.value)}
               />
-              <div className="d-flex gap-2 mt-2">
-                <button className="btn btn-primary" onClick={handleLocationSearch}>
+              <div className="d-flex gap-2 mt-2 flex-wrap">
+                <button className="btn btn-primary flex-grow-1" onClick={handleLocationSearch}>
                   🔍 Search
                 </button>
-                <button className="btn btn-success" onClick={handleUseMyLocation}>
+                <button className="btn btn-success flex-grow-1" onClick={handleUseMyLocation}>
                   📍 Use My Location
                 </button>
               </div>
             </div>
 
-            <button className="btn btn-primary w-100" onClick={handleNext}>
+            <button className="btn btn-primary w-100 mt-3" onClick={handleNext}>
               Next ➡
             </button>
           </div>
         </div>
 
-        <div className="col-md-8">
+        {/* Right Column: Map */}
+        <div className="col-12 col-md-7">
           {mapCenter ? (
-            <>
+            <div className="d-flex flex-column">
               <LocationPlannerMap
                 center={mapCenter}
                 onAreaCalculated={(area, latLng) => {
@@ -178,8 +172,10 @@ export default function BasicInfoForm({
                   setRoofLatLng(latLng);
                 }}
               />
-              <h5 className="mt-2">Roof Area: {roofArea ? roofArea.toFixed(2) : 0} sq.m</h5>
-            </>
+              <h5 className="mt-2 text-center">
+                Roof Area: {roofArea ? roofArea.toFixed(2) : 0} sq.m
+              </h5>
+            </div>
           ) : (
             <div
               className="d-flex align-items-center justify-content-center border border-secondary"

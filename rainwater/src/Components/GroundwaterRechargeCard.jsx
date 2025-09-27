@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 
 export default function GroundwaterRechargeCard({
@@ -30,16 +29,22 @@ export default function GroundwaterRechargeCard({
   }, [groundwaterData]);
 
   return (
-    <div className="card p-3 shadow-sm">
+    <div 
+      className="card p-3 shadow-sm"
+      style={{ minHeight: "250px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+    >
       <h5>Groundwater Recharge Engine</h5>
+
       <div className="mb-2">
-        <strong>Annual potential recharge (from open space):</strong> {annualRechargeM3 ? `${annualRechargeM3.toFixed(2)} m³` : "N/A"}
+        <strong>Annual potential recharge (from open space):</strong>{" "}
+        {annualRechargeM3 ? `${annualRechargeM3.toFixed(2)} m³` : "N/A"}
       </div>
+
       <div className="mb-2">
         <strong>Recommended recharge structure:</strong> {recommendedRechargeStructure}
       </div>
 
-      <div className="mb-2 text-muted">
+      <div className="mb-2 text-muted" style={{ fontSize: "0.85rem" }}>
         Assumptions: {rechargeEfficiency * 100}% effective infiltration on available open space. Conduct infiltration tests & local site investigation before final design.
       </div>
     </div>
