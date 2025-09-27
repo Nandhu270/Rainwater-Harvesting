@@ -50,6 +50,7 @@ export default function Login() {
       const res = await axios.post("http://localhost:5000/api/login",data);
       if(res.status == 200)
       setlogin(true);
+    localStorage.setItem("username", data.email);
     } catch (err) {
       if (err.response) {
         if (err.response.status === 401)
@@ -76,7 +77,7 @@ export default function Login() {
       <div className="w-50 h-100 d-flex justify-content-start">
         <div className="h-100" style={{ width: "80%" }}>
           <Image
-            src="https://images.unsplash.com/photo-1525498128493-380d1990a112?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            src="https://images.unsplash.com/photo-1538300342682-cf57afb97285?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             className="w-100 h-100"
             fluid
             style={{
@@ -167,7 +168,7 @@ export default function Login() {
       <Modal
         show={login}
         onHide={() => {
-          navigate("/dashboard");
+          navigate("/home");
         }}
       >
         <Modal.Header closeButton>
@@ -178,7 +179,7 @@ export default function Login() {
           <Button
             variant="info"
             onClick={() => {
-              navigate("/dashboard");
+              navigate("/home");
             }}
           >
             Close
